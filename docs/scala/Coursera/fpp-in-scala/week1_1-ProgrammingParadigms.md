@@ -90,3 +90,32 @@ Functional Programming is becoming increasingly popular because it offers the fo
 - simpler reasoning principles
 - better modularity
 - good for exploiting parallelism for multicore and cloud computing.
+
+
+## my summary
+우리는 수학을 배우면서 mutable variables를 배운 적이 없다.
+
+1 + 1 = 2이고 a + b = 3 이라면 그냥 3인 것이다.
+오늘은 a + b = 3 이었는데 내일은 a + b = 4일 순 없었다.
+(ax^2 + bx + c 는 여러 값이 될 수 있겠지만)
+
+하지만 imperative programming에서는 자연스러운 개념이다.
+int a = 1;
+int b = 2;
+a + b = 3;
+
+a = 4;
+a + b = 6;
+
+왜 수학적인 원칙을 꺼내 들었냐?
+module화 때문이다.
+
+프로그램이 복잡해지면서 모듈화는 필수이다.
+잘 된 모듈화란 무엇일까? 항상 동일한 결과를 리턴하는 모듈일 것이다.
+
+map 함수를 생각해보면 어느 타입에 상관없이
+List[U]를 리턴한다.
+
+이런 수학적 원칙들은 mutable variables를 인정하지 않는다. 그렇기에 functional programming language에 잘 맞는다.
+
+fp는 이런 모호함을 제거함으로서 원칙을 보다 잘 구현하고 모듈화 하기 좋으며 multicore와 cloud computing 환경에서 병렬처리를 잘 할 수 있게 해준다.
