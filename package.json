@@ -1,6 +1,7 @@
 {
   "scripts": {
     "start": "mkdocs serve --dev-addr 127.0.0.1:7070",
-    "build": "mkdocs build"
+    "build": "mkdocs build",
+    "moveBuildOutput": "npm run build && cp -R ./site/** ../sundicide.github.io/"
   }
 }
