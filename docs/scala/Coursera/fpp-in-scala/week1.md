@@ -1,3 +1,5 @@
+# Week1
+
 ## substitution model
 - 함수의 argument를 왼쪽부터 모두 평가
 - 함수의 오른쪽부터 교체

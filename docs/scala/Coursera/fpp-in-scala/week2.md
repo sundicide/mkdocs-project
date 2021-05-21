@@ -1,4 +1,5 @@
-# Higher order functions
+# Week2
+## Higher order functions
 pass functions as arguments and retun them as results.
 
 functional languages treat functions as first-class values.
