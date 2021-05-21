@@ -5,3 +5,8 @@ theme:
     hljs_languages:
         - yaml
         - scala
+nav:
+    - Home: index.md
+    - Scala:
+        - 'Coursera/fpp-in-scala': scala/fpp-in-scala.md
+        - 'Coursera/fpd-in-scala': scala/fpd-in-scala.md

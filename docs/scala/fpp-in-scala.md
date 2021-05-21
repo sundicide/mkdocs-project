@@ -1,5 +1,241 @@
-# Week2
-## Higher order functions
+# fpp-in-scala
+
+## Week1
+
+### Lecture 1.1 - Programming Paradigms
+
+functional Programming은 paradigm이다. classical imperative paradimg(Java or C)과 약간 다른.
+scala에서는 이 2개의 paradigm을 합칠 수도 있다. 이는 다른 언어에서의 migration을 쉽게 해준다.
+
+In science, a `paradigm` describes distinct concepts or thought patterns in some scientific discipline.
+
+Main Programming Paradigms:
+- imperative programming
+- functional programming
+- logic programming
+
+object-oriented programming도 paradigm이라고 하는 사람들도 있지만 자신의 생각으로는 위 3개의 교차점에 있다고 생각한다.
+
+#### Imperative Programming
+- modifying mutable variables
+- using assignments
+- and control structures such as if-then-else, loops, break, continue, return
+
+Von Neumann computer의 sequence를 이해하는 것은 imperative program을 이해하는 most common informal way이다.
+
+> Processor <------BUS ------> Memory
+
+
+Problem: Scaling up. How can we avoid conceptualizing programs word by word?
+
+high-level abstractions(collections, polynomials, geomtric shapes, strings, documents..)를 정의하는 테크닉이 필요하다.
+
+Ideally: Develop theories of collections, shapes, strings, ...
+
+#### What is a theory
+A theory consist of
+- one or more data types
+- operations on these types
+- laws that describe the relationships between values and operations
+
+보통 theory는 `mutations`를 describe하지 않는다!
+
+mutation: identity는 유지하면서 something을 change하는 것이다.
+
+##### Theories without mutations
+theory of polynomials
+
+> (a*x + b) + (c*x + d) = (a+c)*x + (b+d)
+
+theory of strings
+
+> (a ++ b) ++ c = a ++ (b ++ c)
+
+
+#### Consequences for Programming
+mathematical theroies를 따르면서 high-level concepts 구현을 하려면 mutation은 없어야 한다.
+- theroies do not admit it
+- mutation은 theories의 useful laws를 destoy 할 수 있다.
+
+그러므로
+- concentrate on defining theories for operators expressed as functions
+- avoid mutations
+- have powerful ways to abstract and compose functions
+
+start of function programming means avoid mutations
+
+#### Functional Programming
+- In a restricted sense, FP means programming without mutable variables, assignments, loops, and other imperative control structures
+- In a wider sense, FP meas focusing on the functions
+- In particular, functions can be valuses that are produced, consumed, and composed
+- All this becomes easier in a functional language
+
+#### Functional Programming Language
+- In a restricted sense, a functional programming language is one which does not have mutable variables, assignments, or imperative control structures.
+- In a wider sense, a functional programming language enables the construction of elegant programs that focus on functions.
+- In particular, functions in a FP language are first-class citizens. This means
+    - they can be defined anywhere, including inside other functions
+    - like any other value, they can be passed as parameters to functions and returned as results
+    - as for other values, there exists a set operators to compose functions
+
+#### Some functional programming languages
+In the restricted sense:
+- Pure Lisp, XSLT, XPath, XQuery, FP
+- Haskell (without I/O Monad or UnsafePerformIO)
+
+In the wider sense:
+- Lisp, Scheme, Racket, Clojure ▶ SML, Ocaml, F#
+- Haskell (full language)
+- Scala
+- Smalltalk, Ruby (!)
+
+#### Why Functional Programming?
+Functional Programming is becoming increasingly popular because it offers the following benfits.
+- simpler reasoning principles
+- better modularity
+- good for exploiting parallelism for multicore and cloud computing.
+
+
+#### my summary
+우리는 수학을 배우면서 mutable variables를 배운 적이 없다.
+
+1 + 1 = 2이고 a + b = 3 이라면 그냥 3인 것이다.
+오늘은 a + b = 3 이었는데 내일은 a + b = 4일 순 없었다.
+(ax^2 + bx + c 는 여러 값이 될 수 있겠지만)
+
+하지만 imperative programming에서는 자연스러운 개념이다.
+int a = 1;
+int b = 2;
+a + b = 3;
+
+a = 4;
+a + b = 6;
+
+왜 수학적인 원칙을 꺼내 들었냐?
+module화 때문이다.
+
+프로그램이 복잡해지면서 모듈화는 필수이다.
+잘 된 모듈화란 무엇일까? 항상 동일한 결과를 리턴하는 모듈일 것이다.
+
+map 함수를 생각해보면 어느 타입에 상관없이
+List[U]를 리턴한다.
+
+이런 수학적 원칙들은 mutable variables를 인정하지 않는다. 그렇기에 functional programming language에 잘 맞는다.
+
+fp는 이런 모호함을 제거함으로서 원칙을 보다 잘 구현하고 모듈화 하기 좋으며 multicore와 cloud computing 환경에서 병렬처리를 잘 할 수 있게 해준다.
+
+<hr />
+
+## substitution model
+- 함수의 argument를 왼쪽부터 모두 평가
+- 함수의 오른쪽부터 교체
+
+-> 모든 Expression에 사용 가능 , No side effect
+
+foundation of functional programming인 람다 calculus에 formalized 되어있다.
+
+모든 Expr이 reduce to a value? (X)
+
+아래와 같은 예가 있다.
+```scala
+def loop: Int = loop
+```
+
+### Evaluation Stratigies
+CBV(Call By Value), CBN(Call By Name)
+- CBV: 모든 args는 한 번만 평가한다는 장점
+- CBN: 호출 될 때까지 not evaluted된다는 장점
+
+만약 CBV가 종료된다면 CBN도 종료된다? (O)
+반대로 CBN이 종료된다면 CBV도 종료된다? (X)
+
+scala에서 CBN을 쓰는 방법은 parameter에 `=>`를 붙이면 된다.
+
+```scala
+def myFunc(a:=> Int) = a
+```
+
+### Value Definitions
+```scala
+val x = 2
+val y = square(x) // 바로 평가된다.
+
+
+def loop: Boolean = loop
+
+def x = loop // (O) def는 호출될때 평가된다.
+val x = loop // (X) Error
+
+def and(x: Boolean, y: Boolean) =
+  if (x) y else false
+
+and(false, loop) // (X) Error
+
+def and2(x: Boolean, y:=> Boolean) =
+  if (x) y else false
+and2(false, loop) // false
+```
+
+### Nested Functions
+small func로 분리하는 것. good FP styles
+sqrtIter, imporve 같은 함수들은 외부에 공개(direct 호출) 하고 싶지 않을 수 있다.
+
+이러한 보조 함수들을 내부 함수로 둠으로써 name-space pollution을 방지할 수 있다.
+
+```scala
+def sqrt(x: Double) = {
+  def improve
+  def sqrtIter
+}
+```
+
+### Lexical Scoping
+outer block에 있는 definitions는 inside block에서 visible하다.
+
+보통 문장 라인 끝 `;`는 optional이다.
+다만 한 문장에 여러 expr을 표현할 때는 필수 이다.
+
+```scala
+val y = x + 1; y + y
+```
+
+### Tail Recursion
+calls itself as its last action.
+the function's stack frame can be reused
+(one stack frame이 필요하며, tail calls 라고 함)
+
+`@tailrec` annotation을 함수 위에 추가하면 해당 함수가 tail recur 하지 않을 시 오류가 발생한다.
+
+아래의 factorial 함수는 tailrc 함수가 아니며 gcd는 tailrec 함수이다.
+
+```scala
+def gcd(a: Int, b: Int): Int =
+  if (b == 0) a else gcd(b, a % b)
+
+def factorial(n: Int): Int =
+  if (n == 0) 1 else n * factorial(n - 1)
+```
+
+그 차이는 gcd는 스텝을 진행을 계속 하더라도 본인 호출만 계속 하게 되지만 factorial 같은 경우에는 좌측이 계속 늘어난다
+> 4 * factorial(3)
+
+이를 tail recursive 하게 변경하면 아래와 같다.
+
+```scala
+def factorial(n: Int): Int = {
+  @tailrec
+  def loop(acc: Int, n: Int): Int =
+    if (n == 0) acc
+    else loop(acc * n, n -1)
+  loop(1, n)
+}
+```
+
+Donal Knuth said premature optimization is the source of the evil
+
+## Week2
+
+### Higher order functions
 pass functions as arguments and retun them as results.
 
 functional languages treat functions as first-class values.
@@ -9,7 +245,7 @@ provides a flexible way to compose program.
 
 
 
-## Anonymous Function
+#### Anonymous Function
 함수를 parameter로 전달하다보면 many small function을 만들게 된다. 그렇게 되면 각각의 naming을 정하는 것은 어렵게 된다.
 => anonymous function을 사용한다.
 
@@ -47,7 +283,7 @@ def sumInts(a: Int, b: Int) = sum(x => x, a, b)
 def sumCubes(a: Int, b: Int) = sum(x => x * x * x, a, b)
 ```
 
-# Currying
+### Currying
 
 아래 함수를 더 짧게 할 수는 없을까?
 ```scala
@@ -71,7 +307,7 @@ def product(f: Int => Int)(a: Int, b: Int): Int =
 Idea는 그 보다 전인 Schonfinkel과 Frege에 의해서 나왔지만 currying이란 네임으로 굳어졌다.
 
 
-# Example: Finding Fixed Points
+### Example: Finding Fixed Points
 A number x is called a fixed point(고정 점) of a function f if
 
 > f(x) = x
@@ -115,7 +351,7 @@ def sqrt(x: Double) =
   fixedPoint(y => (y + x / y) / 2)(1)
 ```
 
-## functions as return values
+#### functions as return values
 위의 예제에서 평균을 통해 안정화시키는 기술은 추상화 될 수 있다.
 ```scala
 def averageDamp(f: Double => Double)(x: Double) =
@@ -127,8 +363,8 @@ def sqrt3(x: Double) =
 Higher Order Function이 항상 옳은 것은 아니며 적절 할 때 사용해야 한다.
 
 
-# Functions and Data
-## Classes
+### Functions and Data
+#### Classes
 ```scala
 class Rational(x: Int, y: Int):
   def numer = x
@@ -140,7 +376,7 @@ class Rational(x: Int, y: Int):
 
 스칼라는 types과 value의 names를 `different namespace`에 보관하기 때문에 충돌을 걱정할 필요 없다.
 
-## Objects
+#### Objects
 elements of a class type을 objects라고 부른다.
 class 의 생성자를 calling 함으로서 object를 만들 수 있다.
 
@@ -185,20 +421,20 @@ class Rational(x: Int, y: Int) {
 
 ```
 
-# More Fun With Rationals
+### More Fun With Rationals
 Client's view에서는 내부가 어떻게 동작하던지 동일하게 보인다.
 
 without affecting client를 하면서 다른 구현을 선택하는 것을 `data abstraction`이라고 한다.
 S/E에서의 cornerstone이다.
 
-## Self Reference
+#### Self Reference
 inside of a class, `this`는 현재 실행 중인 method내에서의 object를 의미한다
 
-## Preconditions
+#### Preconditions
 `require`로 class에 조건을 추가할 수 있다.
 조건에 맞지 않으면 IllegalArgumentException이 발생하며 추가한 에러 메세지가 출력된다.
 
-## Assertions
+#### Assertions
 require와 비슷한 의미이다.
 require와 동일하게 condtion과 optional message string을 받는다.
 
@@ -212,7 +448,7 @@ fail일 경우 assert는 require와 달리 AssertionError를 발생한다.
 - require는 함수 호출자에게 precondition을 강요할 때 쓰인다
 - assert는 함수 자신이 체크 할 때 사용한다.
 
-## Constructors
+#### Constructors
 모든 class는 primary constructor(기본 생성자)가 암시적으로 있다.
 - class의 모든 paramters를 받고
 - class body의 모든 statement를 실행한다.
@@ -262,19 +498,18 @@ class Rational(x: Int, y: Int) {
 
 ```
 
+<hr />
 
-
-
-# Evaluation and Operators
-## Operators
-### Infix Notation
+### Evaluation and Operators
+#### Operators
+##### Infix Notation
 parameter를 갖는 모든 메소드는 infix operaotr처럼 사용할 수 있다.
 
 r add s           r.add(s)
 r less s          r.less(s)
 r max s           r.max(s)
 
-### Relaxed Identifiers
+##### Relaxed Identifiers
 operaotr는 identifier로 사용될 수 있다.
 - 영문자: 문자로 시작하고, 뒤에는 문자 혹은 숫자가 올 수 있다.
 - Symbolic: operator symbol로 시작해서, 다른 심볼이 뒤에 올 수 있다.
@@ -296,7 +531,7 @@ examples
 def unary_- : Rational = new Rational(-numer, denom)
 ```
 
-## Precedence Rules
+#### Precedence Rules
 연산자 우선순위.
 첫 번째 문자에 따라 결정된다.
 Java혹은 C와 차이 없다.
