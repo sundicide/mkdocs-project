@@ -581,3 +581,252 @@ class Rational(x: Int, y: Int) {
   override def toString = s"$numer/$denom"
 }
 ```
+
+
+## Week3
+
+### Class Hierarchies
+실제 메소드는 runtime type에 의존한다. 이를 dynamic binding이라고 한다.
+이는 OOP에 기본 요소이다.
+
+아래 함수는 abstract class이다.
+```scala
+abstract class IntSet {
+  def incl(x: Int): IntSet
+  def contains(x: Int): Boolean
+}
+```
+추상 클래스는
+- 구현체가 없는 멤버를 포함할 수 있다.
+- new operator를 사용한 인스턴스 생성을 할 수 없다.
+
+```scala
+abstract class IntSet {
+  def incl(x: Int): IntSet
+  def contains(x: Int): Boolean
+}
+
+class NonEmpty(elem: Int, left: IntSet, right: IntSet) extends IntSet {
+  override def incl(x: Int): IntSet =
+    if (x < elem) new NonEmpty(elem, left incl x, right)
+    else if (x > elem) new NonEmpty(elem, left, right incl x)
+    else this
+
+  override def contains(x: Int): Boolean =
+    if (x < elem) left contains x
+    else if (x > elem) right contains x
+    else true
+
+  override def toString = "{" + left + elem + right + "}"
+}
+
+class Empty extends IntSet {
+  override def incl(x: Int) = new NonEmpty(x, new Empty, new Empty)
+
+  override def contains(x: Int) = false
+  override def toString = "."
+}
+
+
+val t1 = new NonEmpty(3, new Empty, new Empty)
+val t2 = t1 incl 4
+```
+
+위의 예에서 IntSet은 Empty와 NonEmpty의 superclass이다.
+Empty와 NonEmpty는 IntSet의 subclasses이다.
+스칼라에서 superclass가 없으면 java.lang에 있는 Java standard class Object 를 상속 받는다.
+클래스의 direct or indirect superclass를 base classes라고 한다.
+NonEmpty와 IntSet의 base classes는 Object이다.
+
+non-abstract definition을 redfine할 때는 override keyword를 써줘야 한다.
+```scala
+abstract class Base {
+  def foo = 1
+  def bar: Int
+}
+
+class Sub extends Base {
+  override def foo = 2
+  def bar = 3
+}
+```
+
+### Object Definitions
+위의 예에서 유저가 많은 EmptySet을 만들게 되면 문제가 발생한다.
+그래서 이를 object로 선언하는 것이 낫다.
+
+```scala
+object Empty extends IntSet {
+  def incl(x: Int) = new NonEmpty(x, new Empty, new Empty)
+  def contains(x: Int) = false
+}
+```
+이렇게 하면 Empty라는 이름의 singleton object가 만들어 진다.
+이로써 다른 Empty 인스턴스는 만들어질 수 없다.
+Singleton Object는 values 이므로, Empty는 바로 평가된다.
+
+
+### Programs
+Scala에서 standalone application을 만드는 것은 가능하다.
+main method를 포함하는 object를 만들면 된다.
+
+```scala
+object Hello {
+  def main(args: Array[String]) = println("hello world!")
+}
+```
+프로그램이 컴파일 되고 나면 아래의 커맨드로 실행할 수 있다.
+```bash
+> scala Hello
+```
+
+### Dynamic Binding
+code invoked by a method call depends on the runtime of the object that contains the method
+
+ex)
+```scala
+Empty contains 1
+```
+-> false
+
+### Lecture 3.2 - How Classes Are Organized
+#### Packages
+Classes와 objects는 package안에 구성된다된
+
+package에 속하는 class, object는 소스 파일의 최상단에 package를 써야 한다.
+```scala
+package progfun.examples
+
+object Hello { ... }
+```
+아래와 같이 프로그램을 실행할 수 있다.
+```bash
+> scala progfun.examples.Hello
+```
+
+#### Forms of Imports
+```scala
+import week3.Rational // named imports
+import week3.{Rational, Hello} // named imports
+import week3._ // wildcard import
+```
+
+#### Automatic Imports
+- All members of package scala
+- All members of package java.lang
+- All members of the singleton object scala.Predef
+
+
+Int: scala.Int
+Boolean: scala.Boolean
+Object : java.lang.Object
+require: scala.Predef.require
+assert: scala.Predef.assert
+
+#### Traits
+Java 처럼 Scala는 오직 하나의 superclass를 가질 수 있다.(Single Inheritance)
+하지만 여러개의 supertypes를 갖고 싶다면 어떻게 할까?
+traits를 사용하면 된다.
+trait은 abstract class처럼 정의 하면서 trait 키워드를 쓰면 된다를
+```scala
+trait Planar {
+  def height: Int
+  def width: Int
+  def surface = height * width
+}
+```
+
+```scala
+class Square extends Shape with Planar with Movable ...
+```
+trait은 Java의 interface와 비슷하지만 더 강력하다.
+fields와 concrete methods(정의된 메소드)를 가질 수 있기 때문이다.
+
+하지만 trait은 (value) parameters를 가질 수 없다. 이는 클래스만 가능하다.
+
+![](./scala class hierarchy.png)
+
+#### Top Types
+Any: The base type of all types. Methods: '==', '!=', 'equals', 'hashCode', 'toString
+AnyRef: The base type of all reference types; Alias of 'java.lang.Object'
+AnyVal: The base type of all primitive types
+
+#### The Nothing Type
+Nothing은 Scala type hierarchy에서 최 하단에 있다.
+type Nothing에는 value가 없다.
+왜 쓰일까?
+- To signal abnormal termination
+- As an element type of empty collection
+
+#### Exceptions
+자바와 유사하다
+```scala
+throw Exc
+```
+이 expr의 type은 Nothing이다.
+
+example
+```scala
+def error(msg: String) = throw new Error(msg)
+
+error("test")
+```
+
+#### The Null Type
+every reference class type은 null 값을 갖는다.
+null의 타입은 Null 이다.
+Null은 Object를 상속받는 모든 클래스의 subtype이다.
+하지만 AnyVal의 subtypes과는 incompativle 하다.
+
+```scala
+val x = null // x: Null
+val y: String = null // y: String
+val z: Int = null // error: type mismatch
+```
+
+### Lecture 3.3 - Polymorphism
+
+#### Type Parameter
+여러 타입에 대응할 수 있는 타입이다.
+
+```scala
+trait List[T]
+class Cons[T](val head: T, val tail: List[T]) extends List[T]
+class Nil[T] extends List[T]
+```
+타입 파라미터는 square brackets 안에 쓰인다.
+
+#### Generic Functions
+classes처럼 function에도 type parameter를 사용할 수 있다.
+```scala
+def singleton[T](elem: T) = new Cons[T](elem, new Nil[T])
+
+singleton[Int](1)
+singleton[Boolean](true)
+```
+
+#### Type Inference
+스칼라는 function call의 arguments로 부터 parameter의 옳은 타입을 추측할 수 있다.
+그렇기에 대부분의 경우에서 type parameters는 안써도 된다.
+
+```scala
+singleton(1)
+singleton(true)
+```
+
+#### Type Evaluation
+스칼라에서 Type parameter는 evaluation에 영향을 끼치지 않는다.
+모든 type parameters와 type arguments는 프로그램을 평가하기 전에 제거된다.
+이를 `type erasure`라고 부른다.
+
+Java, Scala, Haskell, ML, OCaml에서는 type erasure를 사용한다.
+하지만 C++, C#, F# 같은 언어는 run time시에도 type parameter를 유지한다.
+
+#### Polymorphism
+function type comes "in many forms"
+- function이 여러 타입의 argument에 적용될 수 있다
+- 타입이 여러 타입의 인스턴스를 가질 수 있다.
+
+폴리몰피즘의 두 가지 형태
+- subtyping: instances of subclass 는 base class로 전달 될 수 있다.
+- generic: function 혹은 클래스의 instance는 type paramterization으로 만들 수 있다.
