@@ -1586,9 +1586,137 @@ def concat[T](xs: List[T], ys: List[T]): List[T] =
 `::` 연산자에 paramter 타입 T가 올 수 없기 때문이다. List만 전달해야 한다.
 (그림을 그려보면 foldLeft의 오른쪽엔 T값들이 온다.)
 
-
-
-
-
 ### Lecture 5.6 - Reasoning About Concat
 ### Lecture 5.7 - A Larger Equational Proof on Lists
+
+
+## Week6
+### Lecture 6.1 - Other Collections
+이전에 봤듯이 list는 linear이다.
+첫 번째 element에 접근하는 것이 마지막 element를 접근하는 것보다 빠르다.
+
+스칼라에는 sequence를 구현한 또 다른 `Vector`가 있다.
+이는 list보다 보다 밸런스된 access pattern을 갖는다.
+
+![](./scala vectors.jpg)
+
+여러 depth의 Vector의 공식은
+> log<sub>32</sub>n (n은 vector size이다.)
+
+이 의미는 vector의 크기가 커져도 access 속도가 느리게 증가한다는 것이다.
+그렇기 때문에 decent random access에서 list 보다 vector가 빠르다.
+
+또한 vector는 bulk operation에 좋다.
+- sequence를 traverse하는 것
+- map 함수 적용
+- fold 함수 적용
+
+Vector가 더 좋다면 list는 왜 써야 하나?
+head만 얻을 경우 혹은 tail만 list가 상수 시간으로서 더 유리하다.
+이처럼 access pattern이 recursive structures일 땐 list가 더 유리하다.
+만약 access pattern이 bulk operation이라면 map, fold, filter 처럼, vector가 더 유리하다.
+
+다행히도 Vector와 List간의 전환은 쉽다
+
+```scala
+val nums = Vector(1, 2, 3, -88)
+val people = Vector("Vector", "James", "Peter")
+```
+
+또한 list와 동일한 operations을 지원한다. `::`을 제외하고
+대신 아래와 같은 것들이 있다.
+
+```scala
+x +: xs // Create a new vector with leading element x, followed by all elements of xs
+
+xs :+ x // Create a new vector with trailing element x, preceded by all elements of xs
+```
+(`:`은 항상 sequence를 가리킨다.)
+
+vector에 add는 어떻게 할까?
+아래 그림과 같이 맨 아래쪽에 위치한 빨간색의 Vector를 추가한다고 했을 때
+위쪽 레벨로 올라가면서 이전과 동일한 element들을 가리키면서 하나는 새로 만든 element를 가리키는 새로운 벡터를 만들면서 root 레벨까지 올라간다.
+그렇기 때문에 복잡도는 log<sub>32</sub>n 이다. (Object를 생성하는데 걸리는 시간)
+![](./scala vectors.jpg)
+
+list와 vector의 base class는 Seq이다.
+그리고 Seq은 Iterable의 subclass이다.
+
+
+Arrays와 Strings는 Seq와 동일한 operations를 제공한다.
+그렇기에 필요할때 명시적으로 변경할 수 있다.
+
+```scala
+val xs: Array[Int] = Array(1,2,3)
+xs map (x => 2 * x)
+
+val ys: String = "Hello world!"
+ys filter (_.isUpper)
+```
+
+또다른 sequence type으로 `range`가 있다.
+sequence of evenly spaced integers를 표현한다.
+
+3개의 operators가 있다.
+- to (inclusive)
+- until (exclusive)
+- by (to determine step value)
+
+```scala
+val r: Range = 1 until 5 // 1,2,3,4
+val s: Range = 1 to 5    // 1,2,3,4,5
+1 to 10 by 3             // 1,4,7,10
+6 to 1 by -2             // 6,4,2
+```
+Ranges는 lower bound, upper bound, step value 3개의 필드를 갖는 single Object로 표현할 수 있다.
+
+Sequence는 아래와 같은 operations도 제공한다.
+
+```scala
+xs exists p
+xs forall p   // xs의 모든 요소에 p(x)가 true라면 true 그 외는 false
+xs zip ys     // xs와 ys의 요소들을 pair로 만든 새로운 sequence를 만든다. 예로 List(1,2) List('a', 'b')가 있다면 List((1, 'a'), (2, 'b'))가 된다.
+xs.unzip
+xs.flatMap f  // f를 xs의 모든 element에 적용하고 results를 concatenate한다.
+xs.sum
+xs.product
+xs.max
+xs.min
+```
+
+
+```scala
+val s = "Hello World"
+s filter (c => c.isUpper) // HW
+s exists (c => c.isUpper) // true
+s forall (c => c.isUpper) // false
+
+val pairs = List(1,2,3) zip s // List((1, H), (2, e), (3, l))
+pairs.unzip                   // (List(1,2,3), List(H,e,l))
+
+s flatMap (c => List('.', c)) // .H.e.l.l.o. .W.o.r.l.d
+
+xs.sum // 50
+xs.max // 44
+
+
+def combinations(m: Int, n: Int) =
+  (1 to m) flatMap (x => (1 to n) map (y => (x, y)))
+
+combinations(4,4)
+
+def scalaProduct(xs: Vector[Double], ys: Vector[Double]): Double =
+  (xs zip ys).map(xy => xy._1 * xy._2).sum
+
+// 위 식은 pattern matching function value로 아래처럼 쓸 수 있다.
+def scalaProductUsingPattern(xs: Vector[Double], ys: Vector[Double]): Double =
+  (xs zip ys).map{ case (x, y) => x * y}.sum
+
+def isPrime(n: Int): Boolean = (2 until n) forall (d => n % d != 0)
+```
+
+### Lecture 6.2 - Combinatorial Search and For-Expressions
+### Lecture 6.3 - Combinatorial Search Example
+### Lecture 6.4 - Maps
+### Lecture 6.5 - Putting the Pieces Together
+### Conclusion
