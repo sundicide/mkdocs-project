@@ -1716,7 +1716,328 @@ def isPrime(n: Int): Boolean = (2 until n) forall (d => n % d != 0)
 ```
 
 ### Lecture 6.2 - Combinatorial Search and For-Expressions
+종종 Higher order functions 와 colledctions는 imperative language에서의 loops를 replace 한다.
+중첩된 loops는 이러한 hof의 조합으로 표현할 수 있다.
+
+예를 들어 integer i,j 에 대해 1 <= j < i < n에 대해 i + j가 prime인 i, j를 찾는다고 가정해보자.
+만약 n이 7이라면 i,j는 (2, 1), (3, 2), (4, 1) 등 일 것이다.
+
+일반적인 방법으로는 i와 j를 nested loops로 구성하고 buffer를 생성한 뒤 prime이라면 buffer에 추가할 것이다.
+
+(i, j) pair를 찾는 일반적인 방법은 아래와 같다.
+
+```scala
+(1 until n) map (i =>
+  (1 until i) map (j => (i, j)))
+
+// Vector(Vector(), Vector((2,1)), Vector((3,1), (3,2)...)
+```
+하지만 위 결과를 보면 Vectors of vectors가 만들어진다.
+
+이를 하나의 Vectors로 바꾸려면 어떻게 해야 할까
+위 코드의 결과를 xss라고 할때 아래와 같이 할 수 있다.
+
+```scala
+// 1. foldRight을 이용한 방법
+(xss foldRight Seq[Int]())(_ ++ _)
+
+// 2. buil-in method 인 flatten을 사용하는 방법
+xss.flatten
+
+((1 until n) map (i =>
+  (1 until i) map (j => (i, j)))).flatten
+```
+
+유용한 Law가 있다.
+
+```scala
+xs flatMap f    =   (xs map f).flatten
+```
+그렇기에 아래와 같이 가능하다
+```scala
+(1 until n) flatMap(i =>
+  (1 until i) map (j => (i, j)))
+```
+
+하지만 여전히 완성은 안됐다. sum의 결과가 prime인 pair만 필요하기 때문이다.
+
+```scala
+def isPrime(n: Int) = (2 until n) forall (n % _ != 0)
+
+(1 until n) flatMap(i =>
+  (1 until i) map (j => (i, j))) filter (pair =>
+    isPrime(pair._1 + pair._2))
+```
+
+HOF인 map, flatMap, filter는 manipulating lists를 제공하는 강력한 방법이다.
+하지만 때때로 이는 이해하기 어렵게 한다.
+Scala의 for expreesion notaion이 해결해 줄 수 있다.
+
+```scala
+// 아래와 같은 class가 있다고 하자
+case class Person(name: String, age: Int)
+
+// 20살이 넘는 Person의 names를 얻고 싶다면 아래와 같이 할 수 있다.
+for (p <- persons if p.age > 20) yield p.name
+
+// 위 표현은 아래와 같이 쓸 수 있다.
+persons filter (p => p.age > 20) map (p => p.name)
+```
+위 코드를 봤을 때 for를 이용한 방식이 더 이해하기 쉽다.
+
+imperative languages의 loop와 다른점은 결과로 새로운 list를 만들어 낸다는 점이다.
+
+#### Syntax of For
+```scala
+for ( s ) yield e
+```
+s는 sequence of `generators` and `filters` 이고,
+e는 iteration에서 return 되는 value의 expression이다.
+
+- `generator`의 form은 p <- e 이다. p는 pattern이고 e 는 collection의 value가 되는 expression이다.
+- `filter`의 form은 if f 이다. f는 boolean expression이다.
+- sequence는 반드시 generator로 시작해야 한다.
+- sequence내 만약 여러 개의 generator가 있다면, 마지막 generator는 첫 번째보다 빠르다.
+
+(  s  ) 대신 {  s  } 로 사용할 수 있다.
+그리고 sequence of generators and filters는 semicolon 없이 여러 줄로 쓰일 수 있다.
+
+전에 풀었던 prime pair를 구하는 법을 아래와 같이 쓸 수 있다.
+```scala
+for {
+  i <- 1 until n
+  j <- 1 until i
+  if isPrime(i + j)
+} yield (i, j)
+```
+
+```scala
+def scalarProduct(xs: List[Double], ys: List[Double]): Double = {
+  (for {
+    x <- xs
+    y <- ys
+  } yield x * y).sum
+}
+```
+
+
 ### Lecture 6.3 - Combinatorial Search Example
+Set은 Scala collections의 또 다른 basic abstraction이다.
+
+```scala
+val fruit = Set("apple", "banana", "pear")
+val s = (1 to 6).toSet
+```
+
+대부분의 sequence operations는 sets에서도 가능하다.
+
+```scala
+s map (_ + 2) // Set(3,4,5,6,7,8)
+fruit filter (_.startsWith == "app")
+s.nonEmpty
+```
+
+#### Sets vs Sequences
+차이점이 3가지 있다.
+1. Sets는 unordered이다.
+2. Sets는 중복된 elements를 갖지 못한다.
+3. fundamental operation이 sets에는 포함되어 있다.
+    `s contains 5`
+
+
+#### Example: N-Queens
+recursive alogrithm으로 해결 가능하다.
+- 사이즈가 n인 체스 보드에서 k-1 개의 queen을 놓는 모든 solutions를 이미 생성했다고 가정하자
+- 각 solution은 0~n-1 까지의 columns를 갖는 k-1의 length 리스트로 표현 가능하다.
+- k-1 번째의 row에서 column number of the queen 리스트의 첫 번째로 오고 그 다음에는 k-2 번째의 row에 있는 column number of queen이 온다.
+- solution set은 set of lists로 표현되며, 각 element는 solution이 된다.
+- 이제 k번째에 queen을 배치하기 위해, 이전에 놓였던 것을 고려하여 가능한 모든 배치 경우를 만들어야 한다.
+
+
+```scala
+def queens(n: Int): Set[List[Int]] = {
+  def placeQueens(k: Int): Set[List[Int]] = {
+    if (k == 0) Set(List())
+    else
+//      {
+//        placeQueens(k-1) flatMap ((a) => {
+//          0 until 2 map (b => {
+//            if isSafe(b, a)
+//              b :: a
+//          })
+//        })
+//      }
+      for {
+        queens <- placeQueens(k - 1)
+        col <- 0 until n
+        if isSafe(col, queens)
+      } yield col :: queens
+  }
+
+  def isSafe(col: Int, queens: List[Int]): Boolean = {
+    val row = queens.length
+    val queensWithRow = (row -1 to 0 by -1) zip queens
+    queensWithRow forall {
+      case (r, c) => col != c && math.abs(col - c) != row - r
+    }
+  }
+  placeQueens(n)
+}
+
+def show(queens: List[Int]): String = {
+  val lines =
+    for (col <- queens.reverse)
+      yield Vector.fill(queens.length)("* ").updated(col, "X ").mkString
+  "\n" + (lines mkString "\n")
+}
+
+def main(args: Array[String]): Unit = {
+  val s = (queens(4) map show) mkString "\n"
+  println(s)
+
+  println((queens(5) take 3 map show) mkString "\n")
+}
+```
+
+
 ### Lecture 6.4 - Maps
+또 다른 fundamental collection type으로 map이 있다.
+
+```scala
+val romanNumerals: Map[String, Int] = Map("I" -> 1, "V" -> 5, "X" -> 10)
+val capitalOfCountry = Map("US" -> "Washington")
+```
+
+Class Map[Key, Value]는 colletion type인 Iterable[(Key, Value)]로 확장할 수 있다.
+그렇기 때문에 iterables가 할 수 있는 collection operations가 가능하다.
+
+```scala
+val countryOfCaptials = capitalOfCountry map {
+  case (x, y) => (y, x)
+}
+```
+map은 key/value 쌍의 iterable을 확장한 것이다.
+그렇기 때문에 `key -> value`는 `(key, value)`로 쓸 수도 있다.
+
+
+Class Map[Key, Value]는 또한 Key => Value의 type을 갖는 function으로 확장할 수 있다.
+따라서 함수가 할 수 있는 것은 할 수 있다.
+
+```scala
+capitalOfCountry("US")
+```
+
+map에 존재하지 않는 key를 주면 error가 발생한다.
+```scala
+capitalOfCountry("Andorra") // java.util.NoSuchElementException
+```
+
+주어진 key가 map에 존재하는지 알 수 없을 때 query를 하면 된다.
+```scala
+capitalOfCountry get "US"      // Some("Washington")
+capitalOfCountry get "Andorra" // None
+```
+`get` operation의 결과는 Option value이다.
+
+
+#### The Option Type
+standard library에 속한다.
+
+```scala
+trait Option[+A]
+case class Some[+A](value: A) extends Option[A]
+object None extends Option[Nothing]
+```
+
+map get key는 다음을 리턴한다.
+- None : 맵에 해당 key에 해당하는 값이 없을 경우
+- Some(x): map에 해당 key에 해당하는 값이 있을 경우 value x
+
+options가 case classes이므로 pattern matching에 사용할 수 있다.
+```scala
+def showCapital(country: String) = capitalOfCountry.get(country) match {
+  case Some(capital) => capital
+  case None => "missing data"
+}
+
+showCapital("US")
+showCapital("Andorra")
+```
+Options는 다른 collections에서도 사용할 수 있다.
+
+#### Sorted and GroupBy
+SQL queries에서 유용한 groupBy와 orderBy를 쓸 수 있다.
+
+```scala
+val fruit = List("apple", "pear", "orange", "pineapple")
+fruit sortWith (_.length < _.length) // List("pear", "apple", "orange", "pineapple")
+fruit.sorted // List("apple", "orange", "pear", "pineapple")
+
+fruit groupBy (_.head) // Map(p -> List(pear, pineapple), a -> List(apple), o -> List(orange))
+```
+
+map은 `partial functions`이다. map(key) 를 수행했을 때 해당 하는 값이 없으면 exception을 발생시키기 때문이다.
+withDefaultValue operation을 사용하면 map을 total function으로 만들어준다.
+
+```scala
+val cap1 = capitalOfCountry withDefaultValue "unknown"
+cap1("Andorra") // "Unknown"
+```
+
+
+Poly를 여러 기술을 적용해서 바꿔보자.
+```scala
+class Poly(val terms0: Map[Int, Double]) {
+  // p1과 p2 선언에서 보면 항상 Map으로 감싸줘야 했다.
+  // 아래와 같이 constructor를 사용하면 이런 반복적인 행동을 지울 수 있다.
+  // *의 의미는 해당 패턴이 반복된다는 것이다.
+  def this(bindings: (Int, Double)*) = this(bindings.toMap)
+  // defaultValue를 선언함으로서 addTerm에서 Option부분을 제거했다.
+  val terms = terms0 withDefaultValue 0.0
+  // map의 concatenation인 ++를 foldLeft를 변경해서 간단하게 변경했다.
+  def + (other: Poly) = new Poly((other.terms foldLeft terms)(addTerm))
+  def addTerm(terms: Map[Int, Double],  term: (Int, Double)): Map[Int, Double] = {
+    val (exp, coeff) = term
+    terms + (exp -> (coeff + terms(exp)))
+  }
+
+  override def toString =
+    (for ((exp, coeff) <- terms.toList.sorted.reverse) yield coeff+"x^"+exp) mkString " + "
+}
+
+val p1 = new Poly(1 -> 2.0, 3 -> 4.0, 5 -> 6.2)
+val p2 = new Poly(Map(0 -> 3.0, 3 -> 7.0))
+p1 + p2
+```
+그렇다면 addTerm을 foldLeft로 구현하는 것과 ++로 구현하는 것 중에 어떤 것이 더 효과적일까?
+foldLeft로 구현하면 기존 data structure에 계속 더하는 반면 ++로 구현하면 새로운 List가 계속 생성되기 떄문에
+foldLeft 버전이 더욱 효과적이다.
+
+
 ### Lecture 6.5 - Putting the Pieces Together
-### Conclusion
+```scala
+val mnemonics = Map(
+  '2' -> "ABC", '3' -> "DEF", '4' -> "GHI", '5' -> "JKL",
+  '6' -> "MNO", '7' -> "PQRS", '8' -> "TUV", '9' -> "WXYZ")
+```
+위와 같은 dictionary words가 있을 때 method translate을 구현한다고 해보자.
+`translate(phoneNumber)`
+예를 들어 "7225247386"을 위의 mnemonics를 참조해서 변경하는데 "Scala is fun" solution phrases중 하나여야 한다.
+
+위 예제는 Lutz Prechelt: An Empirical Comparison of Seven Programming Languages. (2000)
+
+Tested with Tcl, Python, Perl, Rexx, Java, C++, C.
+논문에서 가져온 것이다.
+
+- scripting language는 100 라인으로 해결 가능했고
+- 다른 것은 200-300 라인으로 해결 가능했다
+
+
+Scala Immutable collections are
+- easy to use: few steps to do the job
+- concise: one word replaces a whole loop
+- safe: type checker is really good at catching errors.
+- fast: collection ops are tuned, can be parallelized.
+- universal: one vocabulary to work on all kinds of collections.
+
+이것들이 소프트웨어 개발에 있어 매우 매력적으로 만들어준다.
