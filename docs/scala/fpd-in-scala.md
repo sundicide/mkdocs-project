@@ -817,3 +817,192 @@ In this lesson, we have seen that:
 
 - implicit definitions can also take implicit parameters,
  an arbitrary number of implicit definitions can be chained until a terminal definition is reached.
+
+
+## Wee5: Timely Effects
+
+### Lecture 5.1 - Imperative Event Handling: The Observer Pattern
+The Observer Pattern은 model의 변화에 따라 views가 변경되는 것이다.
+
+- publish / subscribe
+- mode/view/controller(MVC)
+라고도 불린다.
+
+```scala
+trait Publisher {
+  private var subscribers: Set[Subscriber] = Set()
+  def subscribe(subscriber: Subscriber): Unit = subscribers += subscriber
+  def unsubscribe(subscriber: Subscriber): Unit = subscribers -= subscriber
+  def publish(): Unit = subscribers.foreach(_.handler(this))
+}
+
+trait Subscriber {
+  def handler(pub: Publisher)
+}
+
+class BankAccount extends Publisher {
+  private var balance = 0
+  def currentBalance: Int = balance
+  def deposit(amount: Int): Unit =
+    if (amount > 0) {
+      balance = balance + amount
+      publish()
+    }
+  def withdraw(amount: Int): Unit =
+    if (0 < amount && amount <= balance) {
+      balance = balance - amount
+      publish()
+    } else throw new Error("insufficient funds")
+}
+
+
+class Consolidator(observed: List[BankAccount]) extends Subscriber {
+  observed.foreach(_.subscribe(this))
+
+  private var total: Int = _
+  compute()
+
+  private def compute() =
+    total = observed.map(_.currentBalance).sum
+
+  def handler(pub: Publisher) = compute()
+
+  def totalBalance = total
+}
+
+val a = new BankAccount
+val b = new BankAccount
+val c = new Consolidator(List(a, b))
+
+c.totalBalance
+a deposit 20
+c.totalBalance
+b deposit 30
+c.totalBalance
+```
+위 코드는 BankAccount를 Observer Pattern으로 구현한 것이다.
+
+Observer Pattern의 장점은
+- view를 state로부터 분리할 수 있다.
+- 주어진 state로 여러 개의 views를 만들 수 있다.
+- set up이 간단하다.
+
+단점은
+- handler가 Unit-typed여서 명령형 스타일이다.
+- 많은 moving parts가 co-ordinated 되어야 한다.
+- Concurrency가 문제를 복잡하게 만든다.
+- View가 state에 강하게 bound되서 즉시 update가 일어난다. 가끔 view와 state간에 looser asynchronous relationship을 만들고 싶을때 단점으로 작용한다.
+
+
+### Lecture 5.2 - Functional Reactive Programming
+#### What is FRP
+Reactive Programming은 in time에 일어난 이벤트들의 sequence에 reacting하는 것이다.
+
+Functional view: event sequence를 signal로 합칠 수 있다.
+
+- signal은 계속해서 변하는 value이다.
+- mutable state를 계속 update 하는 대신 이미 있는 signal을 new로 정의할 수 있다.
+
+#### Example: Mouse Positions
+- Event-based view:
+마우스가 움직일 때마다
+```scala
+MouseMoved(toPos: Position)
+```
+이 fired 된다.
+
+- FRP view:
+```scala
+mousePosition: Signal[Position]
+```
+현재 마우스 위치를 표현하는 signal이 있다.
+
+
+#### Fundamental Signal Operations
+2개의 기본 operation이 있다.
+1. 현재 signal의 value를 얻는 operation. 우리가 정의할 라이브러리에서는 `()`로 표현한다.
+    mousePosition()
+2. define a signal in terms of other signal. 우리가 정의할 라이브러리에서는 Singal 생성자로 표현한다.
+    ```scala
+    def inReactangle(LL: Position, UR: Position): Signal[Boolean] =
+      Signal {
+        val pos = mousePosition()
+        LL <= pos && pos <= UR
+      }
+    ```
+
+#### Constant Signals
+항상 same value를 갖는 signal을 정의할 수 있다.
+```scala
+val sig = Signal(3) // the signal that is always 3
+```
+
+시간에 따라 변하는 signal을 어떻게 정의할 것인가?
+- mousePosition같이 외부에 정의된 signal을 map으로 순회하는 방법이 있다.
+- 또는 `Var`를 사용하는 방법이 있다.
+
+Signal의 Value는 immutable하다.
+하지만 우리는 변경될 수 있는 Signal의 subclass인 Var를 구현할 것이다.
+Var는 value를 현재의 값으로 변경해주는 "update" operation을 갖는다.
+
+```scala
+val sig = Var(3)
+sig.update(5)
+```
+
+scala에서 update는 assignment로 쓸 수 있다.
+예를 들어 arr이라는 이름의 array가 있다고 할 때
+```scala
+arr(i) = 0
+// 은 아래와 같이 변환된다.
+arr.update(i, 0)
+```
+update method는 다음과 같다.
+```scala
+class Array[T] {
+  def update(idx: Int, value: T): Unit
+}
+```
+
+일반적으로 f() = E는 f.update(E)로 축약할 수 있다.
+그러므로
+`sig.update(5)`
+는 아래와 같이 축약할 수 있다.
+`sig() = 5`
+
+
+Var Signal은 mutable variables처럼 보인다.
+`sig()`는 현재 값을 얻는 것이며
+`sig() = newValue`는 update이기 때문이다.
+
+하지만 중요한 차이점이 있다.
+Var는 future points in time에서 자동적으로 계산되는 값을 가질 수 있다.
+또한 mutable variables의 exists 매커니즘이 없고 모든 updates를 직접 propagate해야 한다.
+
+```
+a = 2
+b = 2 * a
+a = a + 1
+b = 2 * a // a 값이 변했지만 b값이 자동적으로 업데이트 되지 않기 때문에 다시 넣어줘야 한다.
+```
+```
+a() = 2
+b() = 2 * a()
+a() = 3 // a가 3으로 업데이트 됐으므로 b는 6으로 자동 업데이트 된다.
+```
+
+아래와 같은 경우는 처리할 수 없다.
+```scala
+s() = s() + 1
+```
+이는 s가 항상 자기 자신보다 1커야 한다는 의미이므로 불가하다.
+
+#### Lecture 5.3 - A Simple FRP Implementation
+##### Thread-Local State
+global state를 synchronization하려면 concurrent access 문제가 생긴다.
+block을 사용하게 되면 느려지고 dealock의 위험성이 있다.
+이를 해겷하기 위한 방법으로 global state대신 thread-local state를 둘 수 있다.
+
+thread-local state란 각 thread가 variable의 copy본에 접근한다는 의미이다.
+그래서 global variable을 사용하지만 thread사이엔 공유가 안된다.
+이를 scala에서는 scala.util.DynamicVariable로 지원한다.
