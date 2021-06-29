@@ -1,5 +1,6 @@
-# Week1
-## Why Scala? Why spark?
+# bigdata
+## Week1
+### Why Scala? Why spark?
 스칼라로 구현된 Spark는 leveraging 함으로서 scale up 하기 쉽게 해준다.
 Spark는 large-scale data processing framework이다.
 
@@ -102,7 +103,7 @@ val totalChars = lengthsRdd.reduce(_ + _)
 4번째 줄의 코드에 가서야 actions가 있기에 평가된다.
 
 
-## Common Transformations in the Wild
+### Common Transformations in the Wild
 아래에 있는 함수들은 모두 RDD를 리턴하므로 transformation이다.
 = Lazy하다!!
 
@@ -112,7 +113,7 @@ val totalChars = lengthsRdd.reduce(_ + _)
 - distinct: `distinct(): RDD[B]` , 중복이 제거된 RDD를 리턴한다.
 
 
-## Common Actions in the Wild
+### Common Actions in the Wild
 리턴 타입이 RDD 혹은 action이다.
 = Eager하다!!
 
@@ -140,7 +141,7 @@ val firstlogsWithErrors = lastYearslogs.filter(_.contains("ERROR"))
 ```
 위와 같이 10개만 취하려 할때 모든 데이터를 순회할 필요 없이 10개를 얻는 순간 종료를 할 수 있다.
 
-## Transformations on Two RDDs
+### Transformations on Two RDDs
 RDDs also support set-like operations, like union and intersection.
 Two-RDD transformations combine two RDDs are combined into one.
 
@@ -151,7 +152,7 @@ Two-RDD transformations combine two RDDs are combined into one.
 - subtract: `subtract(other: RDD[T]): RDD[T]`
 - cartesian: `cartesian[U](other: RDD[U]): RDD[(T, U)]` / 다른 RDD와의 Cartesian product 를 리턴한다
 
-## Other Useful ROD Actions
+### Other Useful ROD Actions
 Scala collections에는 존재하지 않는 Spark에만 존재하는 분산 처리에 장점이 있는 actions도 있다
 아래의 함수들은 반환타입이 RDD가 아니기때문에 actions이다. = Eager하다.
 
@@ -160,7 +161,7 @@ Scala collections에는 존재하지 않는 Spark에만 존재하는 분산 처�
 - saveAsTextFile: `saveAsTextFile(path: String): Unit` / Write the elements of the dataset as a text file in the local filesystem or HDFS.
 - saveAsSequenceFile: `saveAsSequenceFile(path: String): Unit` / Write the elements of the dataset as a Hadoop Se­quenceFile in the local filesystem or HDFS.
 
-## Why is Spark Good for Data Science?
+### Why is Spark Good for Data Science?
 
 대부분의 data science probles는 iteration을 포함한다.
 
@@ -169,7 +170,7 @@ Scala collections에는 존재하지 않는 Spark에만 존재하는 분산 처�
 위 그림에서 위쪽은 Hadoop, 아래쪽은 Spark이다.
 보면 알 수 있듯이 Iteration이 일어날때마다 Hadoop은 IO 타임이 증가하는 반면 Spark에서는 memory computation으로써 IO time을 줄였다.
 
-## Iteration, Example: Logistic Regression
+### Iteration, Example: Logistic Regression
 Logistic regression은 classification을 위한 iterative algorithm이다.
 다른 classification algorithms와 같이 classifier's weights는 training dataset에 기반하여 반복적으로 업데이트 된다.
 
@@ -227,7 +228,7 @@ One of the most common performance bottlenecks of newcomers to Spark arises from
 
 Spark는 Lazy를 발견하면 어떻게 하면 optimization할 수 있을지 analyze한다.
 
-## Excerciese
+### Excerciese
 
 ```scala
 object WikipediaRanking extends WikipediaRankingInterface {
@@ -305,7 +306,7 @@ object WikipediaRanking extends WikipediaRankingInterface {
 }
 ```
 
-# Week2
+## Week2
 distributed Spark에서 reduce 같이
 Reduction Operation이란 무엇인가?
 - foldLeft, reduceRight 등과 같이
@@ -348,7 +349,7 @@ val pairRdd = rdd.map(page => (page.title, page.text))
 ```
 위와 같이 pairRdd를 만들면 groupByKey, reduceByKey, join을 사용할 수 있다.
 
-## Some interesting Pair RDDs operations
+### Some interesting Pair RDDs operations
 
 Transformations(=Lazy)
 - groupByKey
@@ -479,7 +480,7 @@ val ls = List(
 val locations = sc.parallelize(ls)
 ```
 
-## inner join
+### inner join
 Inner joins return a new RDD containing combined pairs whose keys are present in both input RDDs.
 
 ```scala
@@ -499,7 +500,7 @@ trackedCustomers.collect().foreach(println)
 위의 예를 보면 as에서 104가 사라졌다.
 location에는 key 104가 없기 때문이다.
 
-## Outer join
+### Outer join
 Outer joins return a new RDD containing combined pairs whose keys don’t have to be present in both input RDDs.
 
 ```scala
@@ -538,7 +539,7 @@ customersWithLocationDataAndOptionalAbos.collect().foreach(println)
 // (103,(Some((Gress,DemiTarifVisa))，Chur))
 ```
 
-# Week3
+## Week3
 Remember our data is distributed!
 
 ```scala
@@ -597,7 +598,7 @@ Spark에서 가능한 partitioning은 2가지가 있다
 1. Hash partitioning
 2. Range partitioning
 
-## Hash partitioning
+### Hash partitioning
 ```scala
 val purchasesPerCust =
   purchasesRdd
@@ -614,7 +615,7 @@ Then, all tuples in the same partition p are sent to the machine hosting p.
 
 hash partitioning attempts to spread data evenly across partitions based on the key.
 
-## Range partitioning
+### Range partitioning
 Pair RDDs may contain keys that have an ordering defined.
 
 For such RDDs, range partitioning may be more efficient.
@@ -844,7 +845,7 @@ val pairs = wordsRdd.map(c => (c, 1))
 Recomputing missing partitions fast for narrow dependencies. But slow for wide dependencies!
 
 
-# Weel4
+## Weel4
 똑같은 결과가 나오는 코드이더라도 어떻게 수행하느냐에 따라 runtime이 확연하게 차이난다.
 
 - Case1: innerjoin first
@@ -893,7 +894,7 @@ cartesian.filter {
 하지만 DB와 같이 structured data의 경우에는 Spark가 데이터 구조를 알 수 있고 예측할 수 있기에 aggressive optimization이 가능하다.
 => `Spark SQL`이 이를 가능하게 해준다.!
 
-## Spark SQL
+### Spark SQL
 Spark SQL의 goal은
 1. Spark programs(on RDD)와 external data source with a friendly API 간의 relational processing을 지원하는 것이다.
 2. database를 research하는데 high performance를 발휘한다.
@@ -910,7 +911,7 @@ Spark SQL은 Spark의 라이브러리 중 하나로써 3개의 main API가 있�
 
 ![](./spark sql stack.png)
 
-### Relational Queries(SQL)
+#### Relational Queries(SQL)
 
 Everything about SQL is structured.
 In fact, SQL stands for structural query language.
@@ -934,7 +935,7 @@ DataFrames contain Rows which can contain any schema.
 
 Transformations on DataFrames are also known as untyped transformations
 
-### SparkSession
+#### SparkSession
 To get started using Spark SQL, everything starts with the SparkSession
 
 ```scala
@@ -947,7 +948,7 @@ val spark = SparkSession
   .getOrCreate()
 ```
 
-### Creating DataFrames
+#### Creating DataFrames
 DataFrames can be created in two ways:
 
 1. From an existing RDD.
@@ -955,7 +956,7 @@ Either with schema inference, or with an explicit schema.
 2. Reading in a specific data source from file.
 Common structured or semi-structured formats such as JSON.
 
-#### (1a) Create DataFrame from RDD, schema reflectively inferred
+##### (1a) Create DataFrame from RDD, schema reflectively inferred
 
 ```scala
 val tupleRDD = ...// Assume RDD[(Int, String String, String)]
@@ -971,7 +972,7 @@ val peopleRDD =...// Assume RDD[Person]
 val peopleDF = peopleRDD.toDF
 ```
 
-#### (1b) Create DataFrame from existing RDD, schema explicitly specified
+##### (1b) Create DataFrame from existing RDD, schema explicitly specified
 
 ```scala
 case class Person(name: String, age: Int)
@@ -997,7 +998,7 @@ val rowRDD = peopleRDD
 val peopleDF = spark.createDataFname(rowRDD, schema)
 ```
 
-#### (2) Create DataFrame by reading in a data source from file.
+##### (2) Create DataFrame by reading in a data source from file.
 
 Using the SparkSession object, you can read in semi-structured/structured data by using the read method.
 For example, to read in data and infer a schema from a JSON file:
@@ -1015,7 +1016,7 @@ Semi-structured/Structured data sources Spark SQL can directly create DataFrames
 
 To see a list of all available methods for directly reading in semi-structured/structured data, see the latest API docs for DataFrameReader: http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.DataFrameReader
 
-### SQL Literals
+#### SQL Literals
 DataFrame이 만들어 졌으면 이제 dataset에 SQL syntax를 사용할 수 있다.
 
 A DataFrame called peopleDF, we just have to register our DataFrame as a temporary SQL view first:
@@ -1070,7 +1071,7 @@ val sydneyEmployeesDF = spark.sql("""SELECT id, lname
   ORDER BY id""")
 ```
 
-## DataFrames
+### DataFrames
 1. Spark's RDDs와 관련된 API를 제공한다
 2. 자동적으로 aggresively optimized 할 수 있다.
 3. untyped 이다.
@@ -1382,7 +1383,7 @@ Recall that Spark SQL comes with two specialized backend components:
 - Tungsten, off-heap serializer.
 
 
-### Limitations of DataFrames
+#### Limitations of DataFrames
 
 1. Untyped!
 찾고자 하는 column이 없을 시 compile은 되지만 실행해보면 에러가 발생한다.
@@ -1432,7 +1433,7 @@ listingsDS.groupByKey(l => l.zip) // looks like groupByKey on RDDs!
 ```
 
 
-## Datasets
+### Datasets
 
 Datasets are a something in the middle between DataFrames and RDDs
 - You can still use relational DataFrame operations as we learned in previous sessions on Datasets.
@@ -1443,7 +1444,7 @@ Datasets can be used when you want a mix of functional and relational transforma
 And we've almost got a type safe API as well.
 
 
-### Creating Datasets
+#### Creating Datasets
 
 **From a DataFrame.**
 Just use the toDS convenience method.
@@ -1481,7 +1482,7 @@ val keyValuesDF = List((3, "Me"), (1, "Thi"), (2, "Se"), (3, "ssa") (3, "-")), (
 val res = keyValuesDF.map(row => row(0).asinstanceOf[Int] + 1) // Ew...
 ```
 
-### Common (Typed) Transformation on Datasets
+#### Common (Typed) Transformation on Datasets
 
 - map        map[U](f: T => U): Dataset[U]
 - flatMap    flatMap[U](f: T => Traversabl eOnce[U]): Dataset[U]
@@ -1494,7 +1495,7 @@ val res = keyValuesDF.map(row => row(0).asinstanceOf[Int] + 1) // Ew...
   Apply predicate function to each element in the Dataset and return a Dataset of elements that have passed the predicate condition, pred.
 
 
-### Grouped Operations on Datasets
+#### Grouped Operations on Datasets
 Like on DataFrames, Datasets have a special set of aggregation operations meant to be used after a call to groupByKey on a Dataset.
 
 - calling groupByKey on a Dataset returns a KeyValueGroupedDataset
@@ -1505,7 +1506,7 @@ How to group & aggregate on Datasets?
 2. Use an aggregation operation on KeyValueGroupedDataset (return Datasets)
 
 
-### Some KeyValueGroupedDataset Aggregation Operations
+#### Some KeyValueGroupedDataset Aggregation Operations
 - reduceGroups  reduceGroups(f: (V, V) => V): Dataset[(K, V)]
   Reduces the elements of each group of data using the spec­ified binary function. The given function must be commutative and associative or the result may be non-deterministic.
 - agg           agg[U](col: TypedColumn[V, U]): Dataset[(K, U)]
@@ -1547,7 +1548,7 @@ keyValuesDS.groupByKey(p => p._1)
 ```
 
 
-### Aggregators
+#### Aggregators
 
 A class that helps you generically aggregate data. Kind of like the aggregate method we saw on RDDs.
 
@@ -1596,12 +1597,12 @@ keyValuesDS.groupByKey(pair => pair._1)
 // +------+--------------------+
 ```
 
-### Encoders
+#### Encoders
 Encoders are what convert your data between JVM objects and Spark SQL's specialized internal (tabular) representation.
 They're required by all Datasets!
 
 
-### Common Dataset Actions
+#### Common Dataset Actions
 - collect(): Array[T]
   Returns an array that contains all of Rows in this Dataset.
 - count(): Long
@@ -1617,12 +1618,12 @@ They're required by all Datasets!
 - take(n: Int): Array[T]
   Returns the first n rows in the Dataset.
 
-### Limitations of Datasets
+#### Limitations of Datasets
 - Catalyst Can't Optimize All Operations
 - Limited Data Types
 - Requires Semi-Structured/Structured Data
 
-## When to use Datasets vs DataFrames vs RDDs?
+### When to use Datasets vs DataFrames vs RDDs?
 
 Use Datasets when...
 - you have structured / semi-structured data
