@@ -1011,7 +1011,7 @@ Semi-structured/Structured data sources Spark SQL can directly create DataFrames
 - JSON
 - CSV
 - Parquet
-. JDBC
+- JDBC
 
 To see a list of all available methods for directly reading in semi-structured/structured data, see the latest API docs for DataFrameReader: http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.DataFrameReader
 
@@ -1252,7 +1252,7 @@ Like RDDs, DataFrames also have their own set of actions.
   Returns the first row in the DataFrame.
 - show(): Unit
   Displays the top 20 rows of DataFrame in a tabular form.
-- Eake(n: Int): Array[Row]
+- take(n: Int): Array[Row]
   Returns the first n rows in the DataFrame.
 
 
