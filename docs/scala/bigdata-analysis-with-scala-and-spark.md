@@ -49,6 +49,7 @@ Result: Spark has been shown to be l00x more performant than Hadoop, while addin
 
 RDD는 immutable sequential 혹은 parallel Scala collections와 유사하다.
 다음과 같은 Combinators를 제공한다.
+
 - map
 - flatMap
 - filter
@@ -57,6 +58,7 @@ RDD는 immutable sequential 혹은 parallel Scala collections와 유사하다.
 - aggregate
 
 RDD 를 만드는 방법은 두 가지가 있다.
+
 1. Transforming an existing RDD
 2. From a SparkContext (or SparkSession) object.
 
@@ -128,7 +130,9 @@ RDD[String]으로 이루어진 gigabytes의 log가 있다고 가정하다.
 그렇담 2016년 12월에 발생한 ERROR 로그의 개수는 어떻게 카운트 할까?
 ```scala
 val lastYearslogs: RDD[String] = ...
-val numDecErrorlogs = lastYearslogs.filter(lg=> lg.contains("2016-12") && lg.contains("error"))
+val numDecErrorlogs = lastYearslogs.filter(
+    lg=> lg.contains("2016-12") && lg.contains("error")
+  )
   .count()
 ```
 

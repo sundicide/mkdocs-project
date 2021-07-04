@@ -10,4 +10,7 @@ nav:
     - Scala:
         - 'Coursera/fpp-in-scala': scala/fpp-in-scala.md
         - 'Coursera/fpd-in-scala': scala/fpd-in-scala.md
+        - 'Coursera/parallel-programming': scala/parallel-programming.md
         - 'Coursera/bigdata-analysis-spark': scala/bigdata-analysis-with-scala-and-spark.md
+        - 'My Scala': scala/my-scala.md
+        - 'My Spark': scala/my-spark.md
