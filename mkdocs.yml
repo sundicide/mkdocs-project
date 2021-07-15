@@ -14,3 +14,5 @@ nav:
         - 'Coursera/bigdata-analysis-spark': scala/bigdata-analysis-with-scala-and-spark.md
         - 'My Scala': scala/my-scala.md
         - 'My Spark': scala/my-spark.md
+    - Rust:
+        - '01-start-rust': rust/01-start-rust.md
