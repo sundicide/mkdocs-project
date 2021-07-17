@@ -190,13 +190,13 @@ for (i <- 1 to numIterations) {
 ```
 
 
-RDD는 기본저긍로 action을 run할 때마다 recomputed 된다.
+RDD는 기본적으로 action을 run할 때마다 recomputed 된다.
 이는 data가 많아질수록 expensive 해진다.
->Spark는 memory에 캐시를 컨트롤 할 수 있도록 지원해준다.
+> Spark는 memory에 캐시를 컨트롤 할 수 있도록 지원해준다.
 RDD를 메모리에 캐시하기 위해선 `persist()` 혹은 `cache()`를 사용하면 된다.
 
 ```scala
-val lastYearsLogs: RDDEString] = ...
+val lastYearsLogs: RDD[String] = ...
 val logsWithErrors = lastYearsLogs.filter(_.contains("ERROR"))
   .persist()
 val firstLogsWithErrors = logsWithErrors.take(10)
@@ -210,11 +210,12 @@ firstLogsWithErrors를 계산할 때와 numErrors를 계산할 때 총 2번 계�
 이를 위에 Logsitic Regression쪽에 적용하려면 points 선언 마지막에 .persist()를 추가해주면 된다.
 
 데이터를 persist하는 방법은 여러 가지가 있다.
-► in memory as regular Java objects
-► on disk as regular Java objects
-► in memory as serialized Java objects (more compact)
-► on disk as serialized Java objects (more compact)
-► both in memory and on disk (spill over to disk to avoid re-computation)
+
+- in memory as regular Java objects
+- on disk as regular Java objects
+- in memory as serialized Java objects (more compact)
+- on disk as serialized Java objects (more compact)
+- both in memory and on disk (spill over to disk to avoid re-computation)
 
 cache()
 Shorthand for using the default storage level, which is in memory only as regular Java objects.
