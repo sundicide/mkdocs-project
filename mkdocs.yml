@@ -7,6 +7,7 @@ theme:
         - scala
 nav:
     - Home: index.md
+    - Docker: docker.md
     - Scala:
         - 'Coursera/fpp-in-scala': scala/fpp-in-scala.md
         - 'Coursera/fpd-in-scala': scala/fpd-in-scala.md
