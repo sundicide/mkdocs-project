@@ -6,34 +6,36 @@ Spark는 large-scale data processing framework이다.
 
 Hadoop도 좋은 선택이다.
 Spark는
+
 - more expressive 하다. flatMap filter등 다양한 collection 함수를 쓸 수 있다.
 - Performant 하다.
 - Good for data science. iteration을 가능하게 해준다. Hadoop은 이를 구현하기 힘들다.
 
-
-
 Distributed data parallelism은 Shared Memory data parallelism과 다르다.
 
 Shared Memory
+
 - Split the data
-- Workkers/threads independently operate on the data shards in parallel.
+- Workers/threads independently operate on the data shards in parallel.
 - Combine when done (if necessary)
 
 Distributed
+
 - Split the data **over several nodes.**
 - Nodes independently operate on the data shards in parallel.
 - Combine when done (if necessary)
 
-하지만 network latency between workers를 걱정해야 한다.
+하지만 network latency between workers를 걱정해야 한다.<br />
 Distributed data parallelism을 사용함으로서 collections abstraction을 유지할 수 있다.
 
-Apache Spark는 distributed data-parallel programming을 위한 framework이다.
+Apache Spark는 distributed data-parallel programming을 위한 framework이다.<br />
 Spark는 Resilient Distributed Datasets(RDDs)라고 불리는 distributed data parallel model을 implelments한다.
 
 이전에 배웠던 parallel들은 1 machine 내에서 single multicore / multi-processor를 이용한 Data parallelism이었다.
 이제는 이를 Multiple machine으로 확장한다.
 
 이로 인해 고려해야 할 사항들이 있다.
+
 - Partial Failure
 - Latency
 Spark는 이 2가지 이슈를 잘 해결해준다.
@@ -43,11 +45,11 @@ Spark는 이 2가지 이슈를 잘 해결해준다.
 
 Spark는 fault-tolerance와 handling latency를 functional programming 방식으로 해결한다.
 
-Idea: Keep all data immutable and in-memory. All operations on data are just functional transformations, like regular Scala collections. Fault tolerance is achieved by replaying functional transformations over original dataset.
-Result: Spark has been shown to be l00x more performant than Hadoop, while adding even more expressive APls.
+**Idea**: Keep all data immutable and in-memory. All operations on data are just functional transformations, like regular Scala collections. Fault tolerance is achieved by replaying functional transformations over original dataset.<br />
+**Result**: Spark has been shown to be l00x more performant than Hadoop, while adding even more expressive APls.
 
 
-RDD는 immutable sequential 혹은 parallel Scala collections와 유사하다.
+RDD는 immutable sequential 혹은 parallel Scala collections와 유사하다.<br />
 다음과 같은 Combinators를 제공한다.
 
 - map
@@ -63,32 +65,34 @@ RDD 를 만드는 방법은 두 가지가 있다.
 2. From a SparkContext (or SparkSession) object.
 
 
-Scala의 collections에는 transformer와 accessors가 있다.
+Scala의 collections에는 Transformer와 Accessors가 있다.
 
-Transformer: Return new collections as results
+`Transformer`: Return new collections as results
 e.g. map, filter, flatMap, groupBy
 ```scala
 map(f: A => B): Traversable[B]
 ```
 
-Accessor: Return single values as results
+`Accessor`: Return single values as results
 e.g. reduce, fold, aggregate.
 ```scala
 reduce(op: (A, A) => A): A
 ```
 
-이와 유사하게 Spark에서는 RDD에 transformation과 actions를 정의한다.
+이와 유사하게 Spark에서는 RDD에 Transformation과 Actions를 정의한다.
 Transformations는 lazy하고 actions는 eager하다는 것을 반드시 기억해야 한다.
 
 Transformations: Return new *RDDs* as results.
-> They are lazy, their result RDD is not immediately computed.
+
+    They are lazy, their result RDD is not immediately computed.
 
 Actions: Compute a result based on an RDD, and either returned or saved to an external storage system (e.g. HDFS).
-> They are eager, their result is immediately computed.
+
+    They are eager, their result is immediately computed.
 
 
 이게 중요한 이유는 다음과 같다.
-> Laziness/eagerness is how we can limit network communication using the programming model.
+    Laziness/eagerness is how we can limit network communication using the programming model.
 
 
 아래의 예를 살펴보자
