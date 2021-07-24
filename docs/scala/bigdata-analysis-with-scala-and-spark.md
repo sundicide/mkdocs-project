@@ -160,7 +160,7 @@ Two-RDD transformations combine two RDDs are combined into one.
 - subtract: `subtract(other: RDD[T]): RDD[T]`
 - cartesian: `cartesian[U](other: RDD[U]): RDD[(T, U)]` / 다른 RDD와의 Cartesian product 를 리턴한다
 
-### Other Useful ROD Actions
+### Other Useful RDD Actions
 Scala collections에는 존재하지 않는 Spark에만 존재하는 분산 처리에 장점이 있는 actions도 있다
 아래의 함수들은 반환타입이 RDD가 아니기때문에 actions이다. = Eager하다.
 
@@ -171,7 +171,7 @@ Scala collections에는 존재하지 않는 Spark에만 존재하는 분산 처�
 
 ### Why is Spark Good for Data Science?
 
-대부분의 data science probles는 iteration을 포함한다.
+대부분의 data science problems는 iteration을 포함한다.
 
 ![](./iteration and big data processing.png)
 
@@ -316,8 +316,8 @@ object WikipediaRanking extends WikipediaRankingInterface {
 ```
 
 ## Week2
-distributed Spark에서 reduce 같이
-Reduction Operation이란 무엇인가?
+distributed Spark에서 reduce 같이 Reduction Operation이란 무엇인가?
+
 - foldLeft, reduceRight 등과 같이
 - collection을 순환하면서
 - neighboring element를 combine 하면서
@@ -325,6 +325,7 @@ Reduction Operation이란 무엇인가?
 - single element result를 만들어 내는 것이다.
 
 Spark에 RDD에 적용할 수 있는 Reduction Operations는 아래와 같다.
+
 1. fold
 2. reduce
 3. aggregate
@@ -361,6 +362,7 @@ val pairRdd = rdd.map(page => (page.title, page.text))
 ### Some interesting Pair RDDs operations
 
 Transformations(=Lazy)
+
 - groupByKey
 - reduceByKey
 - mapValues
@@ -369,6 +371,7 @@ Transformations(=Lazy)
 - leftOuterJoin / rightOuterJoin
 
 Action(=Eager)
+
 - countByKey
 
 ```scala
@@ -401,8 +404,10 @@ groupedRdd.collect().foreach(println)
 ```
 
 reduceByKey 예시)
+
 - reduceByKey는 groupByKey를 하고 reduce를 하는 것보다 more efficient하다.
 - key에는 관심이 없고 value에만 operate한다.
+
 ```scala
 case class Event(organizer: String, name: String, budget: Int)
 
@@ -451,6 +456,7 @@ avgBudgets.collect().foreach(println)
 
 
 keys 예시)
+
 - keys (def keys: RDD[K]) Return an RDD with the keys of each tuple.
 - Transformation이다. = RDD를 리턴한다.
 
@@ -594,7 +600,7 @@ val purchasesPerMonth =
     .collect()
 ```
 
-![](./shuffle data across network.png)
+![](./shuffle data across network - optimized.png)
 위 그림처럼 network를 통하기 전에 먼저 reduce를 해서 더 효율적이다.(더 적게 주고받기 때문)
 
 그렇다면 Spark는 어떻게 data를 partitioning(필요한 machine에 데이터를 보내는 것) 할까?
@@ -604,6 +610,7 @@ Partitioning은 key base이기 때문에 `pair RDD`에서만 동작한다.
 number of partitions는 configurable하며 기본은 total number of cores on all executor nodes이다.
 
 Spark에서 가능한 partitioning은 2가지가 있다
+
 1. Hash partitioning
 2. Range partitioning
 
@@ -854,7 +861,7 @@ val pairs = wordsRdd.map(c => (c, 1))
 Recomputing missing partitions fast for narrow dependencies. But slow for wide dependencies!
 
 
-## Weel4
+## Week4
 똑같은 결과가 나오는 코드이더라도 어떻게 수행하느냐에 따라 runtime이 확연하게 차이난다.
 
 - Case1: innerjoin first
@@ -905,11 +912,13 @@ cartesian.filter {
 
 ### Spark SQL
 Spark SQL의 goal은
+
 1. Spark programs(on RDD)와 external data source with a friendly API 간의 relational processing을 지원하는 것이다.
 2. database를 research하는데 high performance를 발휘한다.
 3. semi-structured data와 external databases를 easily support 한다.
 
 Spark SQL은 Spark의 라이브러리 중 하나로써 3개의 main API가 있다.
+
 - SQL literal syntax
 - DataFrames
 - Datasets
@@ -1018,6 +1027,7 @@ val df = spark.read.json("examples/src/main/resources/people.json")
 ```
 
 Semi-structured/Structured data sources Spark SQL can directly create DataFrames from:
+
 - JSON
 - CSV
 - Parquet
@@ -1137,6 +1147,7 @@ def join(right: DataFrame): DataFrame // simplified
 Other transformations include: filter, limit, orderBy, where, as, sort, union, drop, amongst others.
 
 You can select and work with columns in three ways:
+
 1. Using $-notation
   // $-notation requires: import spark.implicits._
   `df.filter($"age" > 18)`
@@ -1242,6 +1253,7 @@ In these cases it's often desirable to do one of the following:
 
 
 Dropping records with unwanted values:
+
 - drop() drops rows that contain null or NaN values in any column and returns a new DataFrame.
 - drop("all") drops rows that contain null or NaN values in all columns and returns a new DataFrame.
 - drop(Array("id", "name")) drops rows that contain null or NaN values in the specified columns and returns a new DataFrame.
@@ -1482,6 +1494,7 @@ The Dataset API includes both untyped and typed transformations.
 - **typed transformations** typed variants of many DataFrame transformations + additional transformations such as RDD-like higher-order functions map, flatMap, etc.
 
 These APls are integrated. You can call a map on a DataFrame and get back a Dataset, for example.
+
 - Caveat: not every operation you know from RDDs are available on Datasets, and not all operations look 100% the same on Datasets as they did on RDDs.
 
 But remember, you may have to explicitly provide type information when going from a DataFrame to a Dataset via typed transformations.
@@ -1635,16 +1648,19 @@ They're required by all Datasets!
 ### When to use Datasets vs DataFrames vs RDDs?
 
 Use Datasets when...
+
 - you have structured / semi-structured data
 - you want typesafety
 - you need to work with functional APls
 - you need good performance, but it doesn't have to be the best
 
 Use DataFrames when...
+
 - you have structured / semi-structured data
 - you want the best possible performance, automatically optimized for you
 
 Use RDDs when...
+
 - you have unstructured data
 - you need to fine-tune and manage low-level details of ROD computations
 - you have complex data types that cannot be serialized with Encoders
