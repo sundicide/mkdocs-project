@@ -17,3 +17,4 @@ nav:
         - 'My Spark': scala/my-spark.md
     - Rust:
         - '01-start-rust': rust/01-start-rust.md
+        - '02-start-rust': rust/02-rust-program-structure.md
